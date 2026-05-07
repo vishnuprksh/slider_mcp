@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: slider-mcp
+    runtime: python
+    plan: starter  # upgrade to standard for production workloads
+    region: oregon
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1"
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_FORMAT
+        value: json
+      - key: LOG_LEVEL
+        value: INFO
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: API_KEY
+        generateValue: true  # auto-generated bearer token on Render
+      - key: OUTPUT_DIR
+        value: /tmp/slider_output

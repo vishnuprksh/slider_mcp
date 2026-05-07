@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>{{ deck.title | e }}</title>
+<style>
+/* ── Reset + Variables ────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --primary:        {{ theme.colors.primary }};
+  --secondary:      {{ theme.colors.secondary }};
+  --accent:         {{ theme.colors.accent }};
+  --bg:             {{ theme.colors.background }};
+  --surface:        {{ theme.colors.surface }};
+  --text:           {{ theme.colors.text_primary }};
+  --text-muted:     {{ theme.colors.text_secondary }};
+  --text-on-pri:    {{ theme.colors.text_on_primary }};
+  --radius:         {{ theme.border_radius }}px;
+  --font:           '{{ theme.typography.font_family }}', system-ui, sans-serif;
+  --heading-font:   '{{ theme.typography.heading_font or theme.typography.font_family }}', system-ui, sans-serif;
+  --mono-font:      '{{ theme.typography.mono_font }}', 'Courier New', monospace;
+  --base-size:      {{ theme.typography.base_size }}px;
+  --scale:          {{ theme.typography.scale_ratio }};
+  --aspect-w:       {{ aspect_w }};
+  --aspect-h:       {{ aspect_h }};
+}
+html { font-size: var(--base-size); }
+body {
+  font-family: var(--font);
+  background: #1a1a2e;
+  color: var(--text);
+  padding: 2rem;
+  min-height: 100vh;
+}
+
+/* ── Slide container ──────────────────────────────────── */
+.deck { display: flex; flex-direction: column; gap: 2rem; max-width: 1200px; margin: 0 auto; }
+.slide {
+  background: var(--bg);
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+  aspect-ratio: var(--aspect-w) / var(--aspect-h);
+  box-shadow: {% if theme.shadow_intensity == 'none' %}none{% elif theme.shadow_intensity == 'soft' %}0 4px 16px rgba(0,0,0,.12){% elif theme.shadow_intensity == 'medium' %}0 8px 32px rgba(0,0,0,.2){% else %}0 16px 48px rgba(0,0,0,.35){% endif %};
+  display: flex;
+  flex-direction: column;
+}
+.slide-number { position: absolute; bottom: 1rem; right: 1.5rem; font-size: .75rem; color: var(--text-muted); opacity: .6; }
+
+/* ── Slide layouts ────────────────────────────────────── */
+.layout-title    { justify-content: center; align-items: center; text-align: center;
+                   {% if theme.use_gradients %}background: linear-gradient(135deg, var(--primary), var(--secondary));{% else %}background: var(--primary);{% endif %}
+                   color: var(--text-on-pri); padding: 4rem; }
+.layout-hero_image { position: relative; }
+.layout-two_column   { flex-direction: row; }
+.layout-three_column { flex-direction: row; }
+.layout-comparison   { flex-direction: row; }
+.layout-bullets   { padding: 3rem 4rem; }
+.layout-quote     { justify-content: center; align-items: center; padding: 3rem 5rem; background: var(--surface); }
+.layout-stats     { display: flex; flex-direction: row; align-items: center; justify-content: space-around; padding: 2rem; }
+.layout-timeline  { padding: 3rem 4rem; }
+.layout-section_break { justify-content: center; align-items: center; text-align: center;
+                         background: var(--primary); color: var(--text-on-pri); padding: 3rem; }
+.layout-closing   { justify-content: center; align-items: center; text-align: center;
+                    {% if theme.use_gradients %}background: linear-gradient(135deg, var(--secondary), var(--accent));{% else %}background: var(--secondary);{% endif %}
+                    color: var(--text-on-pri); padding: 4rem; }
+.layout-blank     { padding: 2rem; }
+
+/* ── Column wrapper ───────────────────────────────────── */
+.columns { display: flex; flex: 1; overflow: hidden; }
+.col { flex: 1; padding: 2rem 2.5rem; display: flex; flex-direction: column; gap: 1rem; overflow: hidden; }
+.col + .col { border-left: 1px solid rgba(0,0,0,.08); }
+
+/* ── Slide header ─────────────────────────────────────── */
+.slide-header { padding: 2rem 3rem 1rem; border-bottom: 3px solid var(--primary); }
+.slide-title { font-family: var(--heading-font); font-size: calc(var(--base-size) * var(--scale) * var(--scale) * var(--scale)); font-weight: 700; line-height: 1.2; color: inherit; }
+.slide-subtitle { margin-top: .5rem; font-size: calc(var(--base-size) * var(--scale)); color: var(--text-muted); }
+
+/* content area */
+.slide-body { flex: 1; padding: 1.5rem 3rem; display: flex; flex-direction: column; gap: 1.25rem; overflow: hidden; }
+
+/* ── Content blocks ───────────────────────────────────── */
+/* Text */
+.block-text { line-height: 1.6; }
+.block-text.h1 { font-size: calc(var(--base-size) * var(--scale) * var(--scale) * var(--scale) * var(--scale)); font-weight: 800; }
+.block-text.h2 { font-size: calc(var(--base-size) * var(--scale) * var(--scale) * var(--scale)); font-weight: 700; }
+.block-text.h3 { font-size: calc(var(--base-size) * var(--scale) * var(--scale)); font-weight: 600; }
+.block-text.h4 { font-size: calc(var(--base-size) * var(--scale)); font-weight: 600; }
+.block-text.body { font-size: var(--base-size); }
+.block-text.caption { font-size: calc(var(--base-size) * .875); color: var(--text-muted); }
+.block-text.label { font-size: calc(var(--base-size) * .75); text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); }
+
+/* Bullets */
+.block-bullets { padding-left: 1.5rem; }
+.block-bullets li { padding: .3rem 0; line-height: 1.5; }
+.block-bullets li:first-child.highlight { font-weight: 700; color: var(--primary); font-size: 1.05em; }
+
+/* Image */
+.block-image { max-width: 100%; border-radius: var(--radius); overflow: hidden; }
+.block-image img { width: 100%; height: 100%; object-fit: cover; }
+.block-image.fill { position: absolute; inset: 0; z-index: 0; }
+.block-image.fill img { width: 100%; height: 100%; object-fit: cover; }
+figcaption { font-size: .8rem; color: var(--text-muted); margin-top: .5rem; }
+
+/* Stat */
+.block-stat { text-align: center; padding: 1rem; background: var(--surface); border-radius: var(--radius); border-top: 4px solid var(--accent); }
+.stat-value { font-family: var(--heading-font); font-size: calc(var(--base-size) * 3); font-weight: 800; color: var(--primary); line-height: 1; }
+.stat-label { margin-top: .5rem; font-size: .875rem; color: var(--text-muted); }
+.stat-trend { font-size: .75rem; margin-top: .25rem; }
+.stat-trend.up { color: #16a34a; } .stat-trend.down { color: #dc2626; } .stat-trend.neutral { color: var(--text-muted); }
+
+/* Quote */
+.block-quote { border-left: 5px solid var(--accent); padding: 1rem 1.5rem; }
+.quote-text { font-size: 1.25em; font-style: italic; line-height: 1.6; color: var(--text); }
+.quote-attr { margin-top: .75rem; font-size: .875rem; color: var(--text-muted); font-weight: 600; }
+
+/* Code */
+.block-code { background: #1e1e2e; border-radius: var(--radius); padding: 1.25rem; overflow-x: auto; }
+.block-code pre { font-family: var(--mono-font); font-size: .875em; color: #cdd6f4; line-height: 1.6; white-space: pre-wrap; }
+
+/* Icon */
+.block-icon { display: flex; flex-direction: column; align-items: center; gap: .5rem; }
+.block-icon svg, .block-icon img { width: 48px; height: 48px; }
+.icon-label { font-size: .875rem; color: var(--text-muted); }
+
+/* SVG */
+.block-svg svg { max-width: 100%; height: auto; }
+
+/* ── Navigation controls (if JS enabled) ─────────────── */
+.controls { text-align: center; margin-top: 1rem; color: rgba(255,255,255,.5); font-size: .85rem; }
+
+/* ── Print / export styles ───────────────────────────── */
+@media print {
+  body { background: white; padding: 0; }
+  .slide { break-inside: avoid; page-break-after: always; box-shadow: none; border-radius: 0; }
+  .controls { display: none; }
+}
+</style>
+</head>
+<body>
+{# ── Block macros — must be defined before first use ──────────────────────── #}
+{% macro render_block(block) %}
+  {% set bt = block.block_type.value %}
+  {% if bt == 'text' %}
+    <p class="block-text {{ block.style }}"
+       style="text-align:{{ block.align }}{% if block.color %};color:{{ block.color }}{% endif %}">
+      {{ block.text | e }}
+    </p>
+  {% elif bt == 'bullet_list' %}
+    {% if block.ordered %}<ol class="block-bullets">{% else %}<ul class="block-bullets">{% endif %}
+    {% for item in block.items %}
+      <li{% if loop.first and block.highlight_first %} class="highlight"{% endif %}>{{ item | e }}</li>
+    {% endfor %}
+    {% if block.ordered %}</ol>{% else %}</ul>{% endif %}
+  {% elif bt == 'image' %}
+    <figure class="block-image{% if block.fill %} fill{% endif %}">
+      <img src="{{ block.asset.source | e }}" alt="{{ block.asset.alt_text | e }}"
+           loading="lazy"{% if block.asset.width %} width="{{ block.asset.width | e }}"{% endif %}
+           {% if block.asset.height %} height="{{ block.asset.height | e }}"{% endif %}/>
+      {% if block.caption %}<figcaption>{{ block.caption | e }}</figcaption>{% endif %}
+    </figure>
+  {% elif bt == 'stat' %}
+    <div class="block-stat">
+      <div class="stat-value">{{ block.value | e }}</div>
+      <div class="stat-label">{{ block.label | e }}</div>
+      {% if block.trend %}
+        <div class="stat-trend {{ block.trend }}">
+          {% if block.trend == 'up' %}↑{% elif block.trend == 'down' %}↓{% else %}→{% endif %}
+        </div>
+      {% endif %}
+    </div>
+  {% elif bt == 'quote' %}
+    <blockquote class="block-quote">
+      <p class="quote-text">&ldquo;{{ block.text | e }}&rdquo;</p>
+      {% if block.attribution %}
+        <cite class="quote-attr">— {{ block.attribution | e }}{% if block.role %}, {{ block.role | e }}{% endif %}</cite>
+      {% endif %}
+    </blockquote>
+  {% elif bt == 'code' %}
+    <div class="block-code" role="region" aria-label="{{ block.language }} code">
+      <pre><code>{{ block.code | e }}</code></pre>
+    </div>
+  {% elif bt == 'icon' %}
+    <div class="block-icon">
+      <img src="{{ icon_url(block.icon) | e }}"
+           alt="{{ block.icon.name | e }}" width="{{ block.icon.size }}" height="{{ block.icon.size }}"/>
+      {% if block.label %}<span class="icon-label">{{ block.label | e }}</span>{% endif %}
+    </div>
+  {% elif bt == 'svg' %}
+    <div class="block-svg">{{ block.svg_source }}</div>
+  {% endif %}
+{% endmacro %}
+
+<div class="deck" role="main" aria-label="{{ deck.title | e }}">
+{% for slide in slides %}
+<article class="slide layout-{{ slide.layout.layout.value }}" id="slide-{{ loop.index }}"
+         role="region" aria-label="Slide {{ loop.index }}: {{ slide.title | e }}">
+  {# ── Title / Section-break / Closing — full-bleed, no header bar ── #}
+  {% if slide.layout.layout.value in ['title', 'section_break', 'closing'] %}
+    <h{% if loop.first %}1{% else %}2{% endif %} class="slide-title">{{ slide.title | e }}</h{% if loop.first %}1{% else %}2{% endif %}>
+    {% if slide.subtitle %}<p class="slide-subtitle">{{ slide.subtitle | e }}</p>{% endif %}
+    {% for block in slide.content_blocks %}{{ render_block(block) }}{% endfor %}
+  {# ── Multi-column layouts ─────────────────────────────────────── #}
+  {% elif slide.layout.layout.value in ['two_column', 'three_column', 'comparison'] %}
+    <div class="slide-header">
+      <h2 class="slide-title">{{ slide.title | e }}</h2>
+      {% if slide.subtitle %}<p class="slide-subtitle">{{ slide.subtitle | e }}</p>{% endif %}
+    </div>
+    <div class="columns">
+      {% set ratios = slide.layout.column_ratios %}
+      {% for col_blocks in split_blocks(slide.content_blocks, ratios | length) %}
+      <div class="col" style="flex: {{ ratios[loop.index0] if loop.index0 < ratios | length else 1 }}">
+        {% for block in col_blocks %}{{ render_block(block) }}{% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+  {# ── Stats layout ─────────────────────────────────────────────── #}
+  {% elif slide.layout.layout.value == 'stats' %}
+    <div class="slide-header">
+      <h2 class="slide-title">{{ slide.title | e }}</h2>
+    </div>
+    <div class="slide-body" style="flex-direction: row; justify-content: space-around; align-items: center;">
+      {% for block in slide.content_blocks %}{{ render_block(block) }}{% endfor %}
+    </div>
+  {# ── Default single-column ─────────────────────────────────────── #}
+  {% else %}
+    <div class="slide-header">
+      <h2 class="slide-title">{{ slide.title | e }}</h2>
+      {% if slide.subtitle %}<p class="slide-subtitle">{{ slide.subtitle | e }}</p>{% endif %}
+    </div>
+    <div class="slide-body">
+      {% for block in slide.content_blocks %}{{ render_block(block) }}{% endfor %}
+    </div>
+  {% endif %}
+  <span class="slide-number" aria-hidden="true">{{ loop.index }} / {{ slides | length }}</span>
+</article>
+{% endfor %}
+</div>
+<p class="controls">Generated by Slider MCP &middot; {{ deck.slides | length }} slides</p>
+</body>
+</html>
